@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mission Judge"
+  short_description: "Adversarial milestone completion judge"
+  default_prompt: "Use $mission-judge to adversarially reject vague criteria, judge this plan or milestone against evidence, and push the main dev agent with required corrections before it proceeds."

@@ -1,0 +1,58 @@
+# macOS and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+ENV/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and transient runtime output
+*.log
+logs/
+tmp/
+temp/
+
+# Agent-generated indexes and local session output
+project_document_index.md
+project_document_index.json
+project_document_index.tsv
+project_document_snapshot.tsv
+project_context_health.md
+project_context.sqlite
+.agent/skills/secretary/.cache/
+.agent/user_sessions/
+.agent/tmp/
+.agent/**/.cache/
+
+# Local source/data assets that do not belong in the reusable template
+/*.txt
+/*.epub
+/*.mobi
+/*.pdf
+/*.csv
+/*.sqlite
+/*.sqlite3
+/data/
+/local_data/
+/local_texts/

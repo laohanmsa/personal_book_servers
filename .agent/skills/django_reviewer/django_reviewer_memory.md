@@ -1,0 +1,16 @@
+# Django Reviewer Memory
+- Always split `settings.py` into base, dev, and prod.
+- Prefer `select_related` and `prefetch_related` to avoid N+1 queries.
+- **Avoid N+1 network calls in views; use asyncio or batching for external APIs.**
+- **Use callable defaults (`default=list`) for JSONFields to avoid mutable default pitfalls.**
+- Keep views thin; move business logic and complex context preparation to services or selectors.
+- Models should be pure; avoid making external API or cache calls inside model methods.
+- Task logic should be delegated to services; tasks should only be orchestrators (avoid "Fat Tasks").
+- Move HTML generation from tasks/views to Django templates (`render_to_string`).
+- Centralize cache, metrics, and external-service connections in wrappers to avoid scattered config.
+- Avoid late imports in functions; keep dependencies clear at module level.
+- INSTALLED_APPS should be ordered carefully. Django core apps first, then third-party apps, then user code.
+- **Use `requests.Session` with `HTTPAdapter` for robust external API interactions.**
+- **Batch external API calls (e.g., `get_clob_tickers_batch`) to avoid N+1 network latency.**
+- **Never use `@csrf_exempt` on state-mutating endpoints; always verify CSRF token is sent in headers.**
+- **When matching external activity feeds, always filter by timestamp to prevent false-positive matches against historical data.**

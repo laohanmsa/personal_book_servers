@@ -1,0 +1,4 @@
+interface:
+  display_name: "Optimizer"
+  short_description: "Measure and improve functions with evidence"
+  default_prompt: "Use $optimizer to optimize this function with a frozen benchmark and report the best measured result."
