@@ -48,6 +48,12 @@ Builds:
 bash .agent/skills/secretary/secretary.sh ask "<query>" --level L1
 ```
 
+Queries use Unicode-aware lexical matching against title, path, summary,
+component, type, and topic fields. ASCII terms match exact tokens or safe
+prefixes, while non-ASCII terms can match inside continuous text. Freshness
+adjusts ranking only after a real lexical match; unrelated fresh documents are
+not returned.
+
 Options:
 
 - `--level L0|L1|L2|L3`
@@ -80,6 +86,7 @@ Checks:
 - document count
 - stale document count
 - missing indexed paths
+- changed indexed paths
 
 ### Maintain
 

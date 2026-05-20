@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +35,7 @@ SKIP_DIRS = {
     ".hg",
     ".svn",
     ".cache",
+    ".pytest_cache",
     "__pycache__",
     "node_modules",
     ".venv",
@@ -105,7 +107,28 @@ def summary_from(text: str) -> str:
 
 
 def normalize(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+    normalized = unicodedata.normalize("NFKC", value).casefold()
+    chars = [char if char.isalnum() else " " for char in normalized]
+    return re.sub(r"\s+", " ", "".join(chars)).strip()
+
+
+def is_query_word(word: str) -> bool:
+    return len(word) > 1 or any(ord(char) > 127 for char in word)
+
+
+def has_non_ascii(value: str) -> bool:
+    return any(ord(char) > 127 for char in value)
+
+
+def field_matches(word: str, text: str) -> bool:
+    tokens = text.split()
+    if word in tokens:
+        return True
+    if has_non_ascii(word):
+        return word in text
+    if len(word) >= 3:
+        return any(token.startswith(word) for token in tokens)
+    return False
 
 
 def topic_from(title: str) -> str:
@@ -296,7 +319,7 @@ def load_docs() -> list[Doc]:
 
 
 def query_words(query: str) -> list[str]:
-    return [w for w in normalize(query).split() if len(w) > 1]
+    return [w for w in normalize(query).split() if is_query_word(w)]
 
 
 def score_doc(doc: Doc, words: list[str]) -> tuple[int, str]:
@@ -313,12 +336,12 @@ def score_doc(doc: Doc, words: list[str]) -> tuple[int, str]:
     weights = {"title": 8, "path": 5, "summary": 3, "component": 4, "type": 2, "topic": 6}
     for word in words:
         for field, text in haystacks.items():
-            if word in text.split() or word in text:
+            if field_matches(word, text):
                 score += weights[field]
                 reasons.append(f"{word}:{field}")
-    if doc.freshness == "fresh":
+    if score > 0 and doc.freshness == "fresh":
         score += 2
-    elif doc.freshness == "stale":
+    elif score > 0 and doc.freshness == "stale":
         score -= 1
     return score, ", ".join(reasons[:8]) or "low lexical match"
 
@@ -434,18 +457,27 @@ def doctor() -> tuple[int, str]:
         return 1, "index_status: missing\nrecommendation: run scan\n"
     docs = load_docs()
     missing = [doc.path for doc in docs if not (ROOT / doc.path).exists()]
+    changed = []
+    for doc in docs:
+        path = ROOT / doc.path
+        if not path.exists():
+            continue
+        if path.stat().st_size != doc.size or sha1_file(path) != doc.sha1:
+            changed.append(doc.path)
     stale = [doc for doc in docs if doc.freshness == "stale"]
-    status = "ok" if not missing else "warn"
+    status = "ok" if not missing and not changed else "warn"
     report = "\n".join(
         [
             f"index_status: {status}",
             f"document_count: {len(docs)}",
             f"stale_count: {len(stale)}",
             f"missing_indexed_paths: {len(missing)}",
+            f"changed_indexed_paths: {len(changed)}",
             *(f"missing: {path}" for path in missing[:20]),
+            *(f"changed: {path}" for path in changed[:20]),
         ]
     )
-    return (0 if not missing else 1), report + "\n"
+    return (0 if not missing and not changed else 1), report + "\n"
 
 
 def maintain(args: argparse.Namespace) -> int:
