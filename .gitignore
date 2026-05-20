@@ -56,3 +56,5 @@ project_context.sqlite
 /data/
 /local_data/
 /local_texts/
+/book_text/
+/book_data/
